@@ -1,7 +1,7 @@
-import { getDiff } from 'recursive-diff';
 import domElementPath from 'dom-element-path';
 import { toJSON } from 'cssjson';
 import { camelize } from 'inflected';
+import merge from 'deepmerge-json';
 
 export default function stylize() {
   console.log('stylize');
@@ -9,8 +9,6 @@ export default function stylize() {
 
   const observer = new MutationObserver((records) => {
     records.forEach(r => {
-      console.log('mutation record', r);
-      // Could be part of rules engine -> pass changes through rules engine = much more flexible.
       if (r.type === 'attributes' && r.attributeName === 'style' && r.target) {
 
         const path = domElementPath(r.target);
@@ -24,11 +22,11 @@ export default function stylize() {
         const newCssAsObject = Object.keys(r.target.style).reduce((p, c) => parseInt(c) !== NaN ? { ...p, [camelize(r.target.style[c].replace('-', '_'), false)]: r.target.style[camelize(r.target.style[c].replace('-','_'), false)] } : p, {});
         console.log('newCssAsObject', newCssAsObject);
 
-        const diff = getDiff(oldCssAsObject, newCssAsObject);
-        console.log('diff', diff);
+        const merged = merge(oldCssAsObject, newCssAsObject);
+        console.log('merged', merged);
 
-        //overlay.set(path, { ...(overlay.has(path) ? overlay.get(path)  : { [r.attributeName]: r.target[r.attributeName] })  });
-        //console.log('overlay changed', overlay);
+        overlay.set(path, merged);
+        console.log('overlay changed', overlay);
       }
     });
   });
