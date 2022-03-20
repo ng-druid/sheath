@@ -1,3 +1,3 @@
-import bar from './bar.js';
+import stylize from './stylize.js';
 
-bar();
+stylize();
