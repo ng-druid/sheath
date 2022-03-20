@@ -1,12 +1,10 @@
 import domElementPath from 'dom-element-path';
 import { toJSON } from 'cssjson';
-import { camelize } from 'inflected';
+import { camelize, dasherize, underscore } from 'inflected';
 import merge from 'deepmerge-json';
 
-export default function stylize() {
-  console.log('stylize');
+export default function stylize({ save }) {
   const overlay = new Map();
-
   const observer = new MutationObserver((records) => {
     records.forEach(r => {
       if (r.type === 'attributes' && r.attributeName === 'style' && r.target) {
@@ -27,12 +25,23 @@ export default function stylize() {
 
         overlay.set(path, merged);
         console.log('overlay changed', overlay);
+
+        const rules = [];
+        overlay.forEach((v, k) => {
+          rules.push(k + ' { ' + Object.keys(v).reduce((p, c) => `${dasherize(underscore(p))}${c}:${v[c]};`, ``) + ' }');
+        });
+
+        console.log('rules', rules);
+
+        const mergedCssAsJson = toJSON(rules.join(''));
+        console.log('mergedCssAsJson', mergedCssAsJson);
+
+        save({ mergedCssAsJson });
+
       }
     });
   });
-
   const targetNode = document.getElementsByTagName('body')[0];
   const observerOptions = { childList: true, attributes: true, subtree: true, attributeFilter: [ 'style' ], attributeOldValue: true }
   observer.observe(targetNode, observerOptions);
-
 }
